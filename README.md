@@ -1,4 +1,4 @@
-ThreatGuard is a web application designed to track and visualize global network threats using real-time data and public IP geolocation mapping. It provides security professionals with an interactive threat monitoring platform for enhanced cybersecurity insights.
+ThreatGuard: is a web application designed to track and visualize global network threats using real-time data and public IP geolocation mapping. It provides security professionals with an interactive threat monitoring platform for enhanced cybersecurity insights.
 
 Features
 
