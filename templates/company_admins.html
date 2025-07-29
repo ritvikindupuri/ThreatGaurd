@@ -1,0 +1,352 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        {% include 'partials/_sidebar.html' %}
+        <main id="main-content" class="col-md-10 ms-sm-auto col-lg-10 px-md-4 main-content">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">Team Management</h1>
+                <div class="text-muted small">
+                    Control access and manage administrators for your ThreatGuard platform
+                </div>
+            </div>
+            {% if error %}
+            <div class="alert alert-danger" role="alert">
+                {{ error }}
+            </div>
+            {% endif %}
+
+            <!-- Email Endings Section -->
+            <section class="mb-5">
+                <h3>Domain Access</h3>
+                <p class="text-muted mb-3">
+                    Control which email domains can automatically access the ThreatGuard platform. 
+                    Users with email addresses ending in these domains will be granted admin access.
+                </p>
+                <div class="table-responsive">
+                    <table class="table table-striped table-sm">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Email Ending</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ending in allowed_endings %}
+                            <tr>
+                                <td>{{ ending.id }}</td>
+                                <td>@{{ ending.email_ending }}</td>
+                                <td>
+                                    <button class="btn btn-danger btn-sm delete-ending" data-ending-id="{{ ending.id }}">
+                                        <span class="material-icons align-middle me-1">delete</span>Remove
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <button type="button" class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#addEmailEndingModal">
+                    <span class="material-icons align-middle me-1">add</span>Add New Email Domain
+                </button>
+            </section>
+
+            <!-- Admin Section -->
+            <section>
+                <h3>Company Admins</h3>
+                <p class="text-muted mb-3">
+                    Manage individual admin accounts for the ThreatGuard platform. 
+                    Control access, block, or remove administrators as needed.
+                </p>
+                <div class="table-responsive">
+                    <table class="table table-striped table-sm">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for email in allowed_emails %}
+                            <tr>
+                                <td>{{ email.id }}</td>
+                                <td>{{ email.email }}</td>
+                                <td>
+                                    {% if email.id == 1 %}
+                                        <span class="badge bg-primary">Super Admin</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ email.role }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if email.is_blocked %}
+                                        <span class="badge bg-danger">Blocked</span>
+                                    {% else %}
+                                        <span class="badge bg-success">Active</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if email.id == 1 %}
+                                        <!-- No action buttons for Owner -->
+                                    {% elif email.from_allowed_ending and not email.is_blocked %}
+                                        <button class="btn btn-warning btn-sm block-admin" data-admin-id="{{ email.id }}" data-admin-email="{{ email.email }}">
+                                            <span class="material-icons align-middle me-1">block</span>Block
+                                        </button>
+                                    {% elif email.is_blocked %}
+                                        <button class="btn btn-success btn-sm unblock-admin" data-admin-id="{{ email.id }}" data-admin-email="{{ email.email }}">
+                                            <span class="material-icons align-middle me-1">check_circle</span>Unblock
+                                        </button>
+                                    {% else %}
+                                        <button class="btn btn-danger btn-sm delete-admin" data-admin-id="{{ email.id }}">
+                                            <span class="material-icons align-middle me-1">delete</span>Delete
+                                        </button>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <button type="button" class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#addCompanyAdminModal">
+                    <span class="material-icons align-middle me-1">add</span>Add New Admin
+                </button>
+                <div class="alert alert-info mt-3" role="alert">
+                    <span class="material-icons align-middle me-2">info</span>
+                    The first admin (Super Admin) cannot be modified or deleted.
+                </div>
+            </section>
+
+            <!-- Add Email Ending Modal -->
+            <div class="modal fade" id="addEmailEndingModal" tabindex="-1" aria-labelledby="addEmailEndingModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="addEmailEndingModalLabel">Add Domain Access</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p class="mb-3">Adding an email ending will allow all users with that email domain to become admins. Use this feature carefully.</p>
+                            <form id="addEmailEndingForm">
+                                <div class="mb-3">
+                                    <label for="email_ending" class="form-label">Email Domain</label>
+                                    <input type="text" placeholder="example.com" class="form-control" id="email_ending" required>
+                                    <small class="form-text text-muted">Enter the domain without '@' symbol (e.g., 'example.com').</small>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary" id="saveEmailEnding">Allow Domain</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Admin Modal -->
+            <div class="modal fade" id="addCompanyAdminModal" tabindex="-1" aria-labelledby="addCompanyAdminModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="addCompanyAdminModalLabel">Add Individual Admin</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p class="mb-3">Add a specific email address to grant admin access. This is for individual admin accounts.</p>
+                            <form id="addCompanyAdminForm">
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Admin Email</label>
+                                    <input type="email" class="form-control" id="email" required>
+                                    <small class="form-text text-muted">Enter the full email address of the new admin.</small>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary" id="saveCompanyAdmin">Add Admin</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add Company Admin handler
+        document.getElementById('saveCompanyAdmin').addEventListener('click', function() {
+            const formData = {
+                email: document.getElementById('email').value
+            };
+            
+            fetch('/api/company_admins/create', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showModal('Company Admin saved successfully', () => {
+                        location.reload();
+                    });
+                } else {
+                    showModal('Error: ' + data.message);
+                }
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                showModal('An error occurred while saving the Company Admin');
+            });
+            
+            const modal = bootstrap.Modal.getInstance(document.getElementById('addCompanyAdminModal'));
+            modal.hide();
+        });
+
+        // Delete Admin handlers
+        document.querySelectorAll('.delete-admin').forEach(button => {
+            button.addEventListener('click', function() {
+                const adminId = this.getAttribute('data-admin-id');
+                showConfirmationModal('Are you sure you want to delete this admin?', () => {
+                    fetch(`/api/delete_admin/${adminId}`, {
+                        method: 'DELETE',
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            showModal('Admin deleted successfully', () => {
+                                location.reload();
+                            });
+                        } else {
+                            showModal('Error: ' + data.message);
+                        }
+                    })
+                    .catch((error) => {
+                        console.error('Error:', error);
+                        showModal('An error occurred while deleting the admin');
+                    });
+                });
+            });
+        });
+
+        // Add Email Ending handler
+        document.getElementById('saveEmailEnding').addEventListener('click', function() {
+            const formData = {
+                email_ending: document.getElementById('email_ending').value
+            };
+            
+            fetch('/api/allowed_email_endings/create', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showModal('Email ending saved successfully', () => {
+                        location.reload();
+                    });
+                } else {
+                    showModal('Error: ' + data.message);
+                }
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                showModal('An error occurred while saving the email ending');
+            });
+            
+            const modal = bootstrap.Modal.getInstance(document.getElementById('addEmailEndingModal'));
+            modal.hide();
+        });
+
+        // Delete Email Ending handlers
+        document.querySelectorAll('.delete-ending').forEach(button => {
+            button.addEventListener('click', function() {
+                const endingId = this.getAttribute('data-ending-id');
+                showConfirmationModal('Are you sure you want to delete this email ending?', () => {
+                    fetch(`/api/delete_email_ending/${endingId}`, {
+                        method: 'DELETE',
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            showModal('Email ending deleted successfully', () => {
+                                location.reload();
+                            });
+                        } else {
+                            showModal('Error: ' + data.message);
+                        }
+                    })
+                    .catch((error) => {
+                        console.error('Error:', error);
+                        showModal('An error occurred while deleting the email ending');
+                    });
+                });
+            });
+        });
+
+        // Block admin functionality
+        document.querySelectorAll('.block-admin').forEach(button => {
+            button.addEventListener('click', function() {
+                const adminId = this.getAttribute('data-admin-id');
+                showConfirmationModal('Are you sure you want to block this admin?', () => {
+                    fetch(`/api/block_admin/${adminId}`, {
+                        method: 'POST',
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            showModal('Admin blocked successfully', () => {
+                                location.reload();
+                            });
+                        } else {
+                            showModal('Error: ' + data.message);
+                        }
+                    })
+                    .catch((error) => {
+                        console.error('Error:', error);
+                        showModal('An error occurred while blocking the admin');
+                    });
+                });
+            });
+        });
+
+        // Unblock admin functionality
+        document.querySelectorAll('.unblock-admin').forEach(button => {
+            button.addEventListener('click', function() {
+                const adminId = this.getAttribute('data-admin-id');
+                showConfirmationModal('Are you sure you want to unblock this admin?', () => {
+                    fetch(`/api/unblock_admin/${adminId}`, {
+                        method: 'POST',
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            showModal('Admin unblocked successfully', () => {
+                                location.reload();
+                            });
+                        } else {
+                            showModal('Error: ' + data.message);
+                        }
+                    })
+                    .catch((error) => {
+                        console.error('Error:', error);
+                        showModal('An error occurred while unblocking the admin');
+                    });
+                });
+            });
+        });
+    });
+</script>
+{% endblock %}

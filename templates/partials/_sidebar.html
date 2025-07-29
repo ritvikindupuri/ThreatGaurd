@@ -1,0 +1,21 @@
+<!-- 
+IMPORTANT: All new navigation options should be added to the _navigation.html file.
+Do not add new elements directly to this sidebar file.
+This file is responsible for the structure and styling of the sidebar only.
+-->
+<nav id="sidebar" class="col-md-2 d-none d-md-block sidebar">
+    <div class="position-sticky">
+        <div class="d-flex justify-content-center align-items-center p-3">
+            <button id="sidebar-toggle" class="btn btn-link p-0">
+                <div class="custom-hamburger">
+                    <span></span>
+                    <span></span>
+                </div>
+            </button>
+        </div>
+        <ul class="nav flex-column">
+            {% from 'partials/_navigation.html' import nav_items %}
+            {{ nav_items() }}
+        </ul>
+    </div>
+</nav>

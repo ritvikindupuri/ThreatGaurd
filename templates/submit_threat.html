@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        {% include 'partials/_sidebar.html' %}
+        <main id="main-content" class="col-md-10 ms-sm-auto col-lg-10 px-md-4 main-content">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">Submit Threat</h1>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form id="threatForm">
+                        <div class="mb-3">
+                            <label for="ip_address" class="form-label">IP Address *</label>
+                            <input type="text" class="form-control" id="ip_address" required pattern="^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$">
+                            <div class="form-text">Enter a public IPv4 address (e.g., 8.8.8.8). Private IPs may have limited geolocation data.</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="timestamp" class="form-label">Timestamp *</label>
+                            <input type="datetime-local" class="form-control" id="timestamp" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="threat_type" class="form-label">Threat Type *</label>
+                            <select class="form-select" id="threat_type" required>
+                                <option value="">Select a threat type</option>
+                                <option value="Suspicious Login">Suspicious Login</option>
+                                <option value="Port Scan">Port Scan</option>
+                                <option value="DDoS Attempt">DDoS Attempt</option>
+                                <option value="Malware Detection">Malware Detection</option>
+                                <option value="Data Exfiltration">Data Exfiltration</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description (Optional)</label>
+                            <textarea class="form-control" id="description" rows="3" placeholder="Additional details about the threat"></textarea>
+                            <div class="form-text">Provide optional additional context about the threat</div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" id="submit-threat-btn" class="btn btn-primary btn-lg">
+                                <span class="material-icons align-middle me-2">security</span>
+                                Submit Threat
+                            </button>
+                            <button type="button" id="submit-attack-btn" class="btn btn-danger btn-lg mt-2">
+                                <span class="material-icons align-middle me-2">warning</span>
+                                Submit Attack
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Submit Threat Form Script Loaded');
+        
+        const threatForm = document.getElementById('threatForm');
+        const submitThreatButton = document.getElementById('submit-threat-btn');
+        const submitAttackButton = document.getElementById('submit-attack-btn');
+        const ipAddressInput = document.getElementById('ip_address');
+        const timestampInput = document.getElementById('timestamp');
+        const threatTypeSelect = document.getElementById('threat_type');
+        const descriptionTextarea = document.getElementById('description');
+        
+        console.log('Form Elements:', {
+            threatForm,
+            submitThreatButton,
+            submitAttackButton,
+            ipAddressInput,
+            timestampInput,
+            threatTypeSelect,
+            descriptionTextarea
+        });
+        
+        // Set default timestamp to current date and time
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        timestampInput.value = now.toISOString().slice(0, 16);
+        
+        // IP Address validation function
+        function isPrivateIP(ip) {
+            const privateRanges = [
+                /^10\./,                   // 10.0.0.0 - 10.255.255.255
+                /^172\.(1[6-9]|2[0-9]|3[0-1])\./,  // 172.16.0.0 - 172.31.255.255
+                /^192\.168\./,             // 192.168.0.0 - 192.168.255.255
+                /^127\./,                  // Loopback
+                /^169\.254\./              // Link-local
+            ];
+            return privateRanges.some(range => range.test(ip));
+        }
+        
+        // Validate form inputs
+        function validateForm() {
+            console.log('Validating form...');
+            
+            const ipAddress = ipAddressInput.value.trim();
+            const threatType = threatTypeSelect.value;
+            const timestamp = timestampInput.value;
+            
+            console.log('Form Values:', {
+                ipAddress,
+                threatType,
+                timestamp
+            });
+            
+            // Check required fields
+            if (!ipAddress || !threatType || !timestamp) {
+                console.error('Form validation failed: Missing required fields');
+                showModal('Please fill in all required fields.');
+                return false;
+            }
+            
+            return true;
+        }
+        
+        // Handle form submission
+        function handleSubmit(e) {
+            e.preventDefault();
+            console.log('Form submission triggered');
+            
+            // Validate form before submission
+            if (!validateForm()) {
+                return;
+            }
+            
+            const ipAddress = ipAddressInput.value;
+            
+            // Disable submit buttons to prevent multiple submissions
+            submitThreatButton.disabled = true;
+            submitAttackButton.disabled = true;
+            submitThreatButton.innerHTML = 'Submitting...';
+            submitAttackButton.innerHTML = 'Submitting...';
+            
+            // Check for private IP
+            if (isPrivateIP(ipAddress)) {
+                showConfirmationModal(
+                    'This appears to be a private IP address. Geolocation data may be limited. Do you want to continue?', 
+                    () => submitThreat(ipAddress),  // Confirmed
+                    () => {
+                        // Re-enable submit buttons if cancelled
+                        submitThreatButton.disabled = false;
+                        submitAttackButton.disabled = false;
+                        submitThreatButton.innerHTML = '<span class="material-icons align-middle me-2">security</span>Submit Threat';
+                        submitAttackButton.innerHTML = '<span class="material-icons align-middle me-2">warning</span>Submit Attack';
+                    }
+                );
+            } else {
+                submitThreat(ipAddress);
+            }
+        }
+        
+        // Threat submission function
+        function submitThreat(ipAddress) {
+            console.log('Submitting threat for IP:', ipAddress);
+            
+            const formData = {
+                ip_address: ipAddress,
+                timestamp: timestampInput.value,
+                threat_type: threatTypeSelect.value,
+                description: descriptionTextarea.value
+            };
+            
+            console.log('Submitting data:', formData);
+            
+            fetch('/api/threats/create', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log('Response data:', data);
+                if (data.status === 'success') {
+                    window.location.href = `/threat-location/${data.threat_id}`;
+                } else {
+                    console.error('Threat submission error:', data.message);
+                    showModal('Error: ' + data.message);
+                    // Re-enable submit buttons on error
+                    submitThreatButton.disabled = false;
+                    submitAttackButton.disabled = false;
+                    submitThreatButton.innerHTML = '<span class="material-icons align-middle me-2">security</span>Submit Threat';
+                    submitAttackButton.innerHTML = '<span class="material-icons align-middle me-2">warning</span>Submit Attack';
+                }
+            })
+            .catch((error) => {
+                console.error('Error submitting threat:', error);
+                showModal('An error occurred while submitting the threat');
+                // Re-enable submit buttons on error
+                submitThreatButton.disabled = false;
+                submitAttackButton.disabled = false;
+                submitThreatButton.innerHTML = '<span class="material-icons align-middle me-2">security</span>Submit Threat';
+                submitAttackButton.innerHTML = '<span class="material-icons align-middle me-2">warning</span>Submit Attack';
+            });
+        }
+        
+        // Add submit event listeners
+        threatForm.addEventListener('submit', handleSubmit);
+        submitAttackButton.addEventListener('click', handleSubmit);
+        
+        // Add sidebar submit threat button functionality
+        const sidebarSubmitThreatButton = document.getElementById('sidebar-submit-threat');
+        if (sidebarSubmitThreatButton) {
+            sidebarSubmitThreatButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (validateForm()) {
+                    handleSubmit(e);
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

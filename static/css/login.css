@@ -1,0 +1,96 @@
+/* Modern Cybersecurity Theme Login Styles */
+:root {
+    --primary-color: #0A1930;      /* Deep navy */
+    --secondary-color: #1E3A5F;    /* Rich blue */
+    --accent-color: #00F5FF;       /* Bright cyan */
+    --background-color: #050B16;   /* Dark background */
+    --card-bg: #0F2847;           /* Card background */
+    --text-primary: #E6F1FF;      /* Bright text */
+    --text-secondary: #8892B0;    /* Muted text */
+    --description-text: #64FFDA;  /* Highlight text */
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+    overflow: hidden;
+}
+
+.login-container {
+    max-width: 400px;
+    width: 100%;
+    background-color: var(--card-bg);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 40px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(100, 255, 218, 0.1);
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.login-container:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.3);
+}
+
+.login-logo {
+    max-width: 120px;
+    margin: 0 auto 20px;
+    display: block;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.login-logo:hover {
+    transform: scale(1.05);
+}
+
+.login-title {
+    text-align: center;
+    color: var(--accent-color);
+    margin-bottom: 15px;
+    font-weight: 700;
+    font-size: 2rem;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+}
+
+.login-subtitle {
+    text-align: center;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+    font-weight: 500;
+    font-size: 1rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.login-description {
+    text-align: center;
+    color: var(--text-secondary);
+    margin-bottom: 30px;
+    line-height: 1.6;
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+    .login-container {
+        max-width: 95%;
+        padding: 20px;
+    }
+    .login-title {
+        font-size: 1.8rem;
+    }
+    .login-subtitle {
+        font-size: 0.9rem;
+    }
+}

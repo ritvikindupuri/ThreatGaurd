@@ -1,0 +1,5 @@
+-- Initial schema creation
+CREATE TABLE IF NOT EXISTS allow_list (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email VARCHAR(120) UNIQUE NOT NULL
+);

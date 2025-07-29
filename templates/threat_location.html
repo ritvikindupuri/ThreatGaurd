@@ -1,0 +1,275 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        {% include 'partials/_sidebar.html' %}
+        <main id="main-content" class="col-md-10 ms-sm-auto col-lg-10 px-md-4 main-content">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">Threat Location</h1>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Threat Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>IP Address:</strong> {{ threat.ip_address }}</p>
+                            <p><strong>Timestamp:</strong> {{ threat.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                            <p><strong>Threat Type:</strong> {{ threat.threat_type }}</p>
+                            <p><strong>Description:</strong> {{ threat.description }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Location:</strong></p>
+                            <p>
+                                {% if threat.country %}
+                                    {{ threat.country }}
+                                    {% if threat.city %}, {{ threat.city }}{% endif %}
+                                    {% if threat.region %} ({{ threat.region }}){% endif %}
+                                {% else %}
+                                    Location information not available
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Map Section -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Geographic Location</h5>
+                    <small class="text-muted">Click on the map to view in full screen</small>
+                </div>
+                <div class="card-body" style="height: 500px; position: relative;">
+                    <div id="map" style="height: 100%; width: 100%; cursor: pointer;"></div>
+                </div>
+            </div>
+            
+            <div class="mt-3 d-flex justify-content-start gap-2">
+                <a href="{{ url_for('submit_threat_route') }}" class="btn btn-primary d-flex align-items-center">
+                    <span class="material-icons align-middle me-2">add_circle</span>
+                    Submit New Threat
+                </a>
+                <a href="{{ url_for('home_route') }}" class="btn btn-secondary d-flex align-items-center">
+                    <span class="material-icons align-middle me-2">dashboard</span>
+                    Back to Dashboard
+                </a>
+            </div>
+        </main>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<!-- Include Leaflet CSS and JS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<style>
+    #map {
+        cursor: zoom-in;
+        transition: all 0.3s ease;
+        height: 500px;  /* Ensure consistent map height */
+        width: 100%;    /* Full width */
+    }
+    .map-container {
+        position: relative;
+        width: 100%;
+        height: 500px;
+        background-color: #f0f0f0;  /* Placeholder background */
+    }
+    .map-loading {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: #333;
+        font-size: 16px;
+    }
+</style>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Ensure map container has a defined height and width
+        const mapContainer = document.getElementById('map');
+        mapContainer.style.height = '500px';
+        mapContainer.style.width = '100%';
+        mapContainer.style.minHeight = '400px';
+
+        // Add loading indicator
+        const loadingIndicator = document.createElement('div');
+        loadingIndicator.className = 'map-loading';
+        loadingIndicator.textContent = 'Loading map...';
+        loadingIndicator.style.position = 'absolute';
+        loadingIndicator.style.top = '50%';
+        loadingIndicator.style.left = '50%';
+        loadingIndicator.style.transform = 'translate(-50%, -50%)';
+        mapContainer.parentNode.insertBefore(loadingIndicator, mapContainer);
+
+        // Initialize the map with robust options
+        const map = L.map('map', {
+            center: [0, 0],
+            zoom: 2,
+            maxZoom: 18,
+            minZoom: 2,
+            worldCopyJump: true,  // Allow map to wrap around
+            zoomControl: true,
+            attributionControl: true,
+            preferCanvas: true,  // Use canvas renderer for better performance
+            fadeAnimation: true,
+            zoomAnimation: true
+        });
+
+        // Use a more reliable tile layer with better global coverage
+        const tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            crossOrigin: true,  // Enable CORS
+            detectRetina: true,  // Use higher resolution tiles on retina displays
+            maxZoom: 19,
+            minZoom: 2
+        }).addTo(map);
+
+        // Ensure map fills container after loading
+        tileLayer.on('load', function() {
+            loadingIndicator.style.display = 'none';
+            map.invalidateSize();  // Recalculate map size
+        });
+
+        // Add error handling for tile loading
+        tileLayer.on('tileerror', function(error, tile) {
+            console.error('Error loading map tile:', error);
+            loadingIndicator.textContent = 'Error loading map. Please refresh.';
+        });
+
+        // Add marker if coordinates are available
+        {% if threat.latitude and threat.longitude %}
+            const marker = L.marker([{{ threat.latitude }}, {{ threat.longitude }}]).addTo(map);
+            map.setView([{{ threat.latitude }}, {{ threat.longitude }}], 8);
+            
+            // Add popup with location information
+            let popupContent = '{{ threat.ip_address }}';
+            {% if threat.country %}
+                popupContent += '<br>{{ threat.country }}';
+                {% if threat.city %}
+                    popupContent += ', {{ threat.city }}';
+                {% endif %}
+                {% if threat.region %}
+                    popupContent += '<br>{{ threat.region }}';
+                {% endif %}
+            {% endif %}
+            marker.bindPopup(popupContent).openPopup();
+        {% else %}
+            map.setView([0, 0], 2);
+            // Display a message when location is not available
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'alert alert-warning mt-3';
+            messageDiv.textContent = 'Geographic location information is not available for this IP address.';
+            document.getElementById('map').parentNode.appendChild(messageDiv);
+        {% endif %}
+
+        // Full screen map functionality
+        const mapElement = document.getElementById('map');
+        mapContainer.addEventListener('click', function() {
+            // Create full screen overlay with smooth transition
+            const fullScreenOverlay = document.createElement('div');
+            fullScreenOverlay.style.position = 'fixed';
+            fullScreenOverlay.style.top = '0';
+            fullScreenOverlay.style.left = '0';
+            fullScreenOverlay.style.width = '100%';
+            fullScreenOverlay.style.height = '100%';
+            fullScreenOverlay.style.backgroundColor = 'rgba(0,0,0,0.9)';
+            fullScreenOverlay.style.zIndex = '9999';
+            fullScreenOverlay.style.display = 'flex';
+            fullScreenOverlay.style.justifyContent = 'center';
+            fullScreenOverlay.style.alignItems = 'center';
+            fullScreenOverlay.style.opacity = '0';  // Start transparent
+            fullScreenOverlay.style.transition = 'opacity 0.3s ease';
+
+            // Create full screen map container
+            const fullScreenMapContainer = document.createElement('div');
+            fullScreenMapContainer.style.width = '95%';
+            fullScreenMapContainer.style.height = '95%';
+            fullScreenMapContainer.style.backgroundColor = 'transparent';
+            fullScreenMapContainer.style.borderRadius = '10px';
+            fullScreenMapContainer.style.boxShadow = '0 0 20px rgba(0,0,0,0.5)';
+
+            // Create close button with improved styling
+            const closeButton = document.createElement('button');
+            closeButton.innerHTML = '&times;';  // Use × symbol
+            closeButton.style.position = 'absolute';
+            closeButton.style.top = '10px';
+            closeButton.style.right = '10px';
+            closeButton.style.zIndex = '10000';
+            closeButton.style.padding = '10px 15px';
+            closeButton.style.backgroundColor = 'rgba(255,255,255,0.2)';
+            closeButton.style.color = 'white';
+            closeButton.style.border = 'none';
+            closeButton.style.borderRadius = '50%';
+            closeButton.style.fontSize = '24px';
+            closeButton.style.cursor = 'pointer';
+            closeButton.style.transition = 'background-color 0.2s ease';
+
+            // Create full screen map with enhanced options
+            const fullScreenMap = L.map(fullScreenMapContainer, {
+                center: map.getCenter(),
+                zoom: map.getZoom(),
+                zoomControl: true,
+                attributionControl: true,
+                maxZoom: 18,
+                minZoom: 2,
+                worldCopyJump: true
+            });
+
+            // Use the same tile layer as the original map
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                crossOrigin: true,
+                detectRetina: true
+            }).addTo(fullScreenMap);
+
+            // Add marker to full screen map
+            {% if threat.latitude and threat.longitude %}
+                const fullScreenMarker = L.marker([{{ threat.latitude }}, {{ threat.longitude }}]).addTo(fullScreenMap);
+                fullScreenMap.setView([{{ threat.latitude }}, {{ threat.longitude }}], 8);
+                
+                // Add popup with location information
+                let popupContent = '{{ threat.ip_address }}';
+                {% if threat.country %}
+                    popupContent += '<br>{{ threat.country }}';
+                    {% if threat.city %}
+                        popupContent += ', {{ threat.city }}';
+                    {% endif %}
+                    {% if threat.region %}
+                        popupContent += '<br>{{ threat.region }}';
+                    {% endif %}
+                {% endif %}
+                fullScreenMarker.bindPopup(popupContent).openPopup();
+            {% endif %}
+
+            // Add elements to overlay
+            fullScreenOverlay.appendChild(closeButton);
+            fullScreenOverlay.appendChild(fullScreenMapContainer);
+            document.body.appendChild(fullScreenOverlay);
+
+            // Fade in the overlay
+            setTimeout(() => {
+                fullScreenOverlay.style.opacity = '1';
+            }, 50);
+
+            // Close button functionality with fade out
+            closeButton.addEventListener('click', function() {
+                fullScreenOverlay.style.opacity = '0';
+                setTimeout(() => {
+                    document.body.removeChild(fullScreenOverlay);
+                }, 300);
+            });
+
+            // Ensure map is fully rendered after creation
+            setTimeout(() => {
+                fullScreenMap.invalidateSize();
+            }, 100);
+        });
+    });
+</script>
+{% endblock %}

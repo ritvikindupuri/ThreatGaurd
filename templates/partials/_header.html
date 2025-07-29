@@ -1,0 +1,35 @@
+<!-- 
+IMPORTANT: All new navigation options should be added to the _navigation.html file.
+Do not add new elements directly to this header file.
+The logout option is meant to be here by itself as it is a special case.
+-->
+<nav class="navbar navbar-expand-lg navbar-light fixed-top">
+    <div class="container-fluid mx-2 mx-md-3">
+        <div class="d-flex align-items-center">
+            <a class="navbar-brand" href="/">
+                <img style="max-height: 30px;" class="me-2 rounded" src="{{ url_for('static', filename='company_logo.png') }}" alt="Dashboard" height="30" style="border-radius: 10px;">
+            </a>
+        </div>
+        <div class="d-flex align-items-center">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="material-icons">menu</span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                    <li class="nav-item d-lg-none">
+                        <ul class="navbar-nav">
+                            {% from 'partials/_navigation.html' import nav_items %}
+                            {{ nav_items() }}
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link d-flex align-items-center" href="{{ url_for('logout') }}">
+                            <span class="material-icons me-2">logout</span>
+                            Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</nav>

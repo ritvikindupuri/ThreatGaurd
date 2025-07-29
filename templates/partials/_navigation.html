@@ -1,0 +1,20 @@
+{% macro nav_items() %}
+  <li class="nav-item">
+    <a class="nav-link d-flex align-items-center" href="{{ url_for('home_route') }}">
+      <span class="material-icons me-2">dashboard</span>
+      <span class="menu-text">Dashboard</span>
+    </a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link d-flex align-items-center" href="{{ url_for('company_admins_route') }}">
+      <span class="material-icons me-2">group</span>
+      <span class="menu-text">Team</span>
+    </a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link d-flex align-items-center" href="{{ url_for('submit_threat_route') }}" id="sidebar-submit-threat">
+      <span class="material-icons me-2">security</span>
+      <span class="menu-text">Submit Threat</span>
+    </a>
+  </li>
+{% endmacro %}

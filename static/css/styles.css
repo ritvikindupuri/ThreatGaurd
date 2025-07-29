@@ -1,0 +1,236 @@
+/* Modern Cybersecurity Theme */
+:root {
+    --primary-color: #0A1930;      /* Deep navy */
+    --secondary-color: #1E3A5F;    /* Rich blue */
+    --accent-color: #00F5FF;       /* Bright cyan */
+    --background-color: #050B16;   /* Dark background */
+    --card-bg: #0F2847;           /* Card background */
+    --text-primary: #E6F1FF;      /* Bright text */
+    --text-secondary: #8892B0;    /* Muted text */
+    --description-text: #64FFDA;  /* Highlight text */
+    --danger-color: #FF4D4D;     /* Bright red */
+    --success-color: #00FF9D;    /* Bright green */
+    --warning-color: #FFB800;    /* Bright yellow */
+    --gradient-start: #0A1930;   /* Gradient start */
+    --gradient-end: #1E3A5F;     /* Gradient end */
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+    color: var(--text-primary);
+    padding-top: 56px;
+    min-height: 100vh;
+}
+
+.navbar {
+    background-color: rgba(15, 40, 71, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(100, 255, 218, 0.1);
+}
+
+.sidebar {
+    background-color: rgba(15, 40, 71, 0.95);
+    backdrop-filter: blur(10px);
+    height: calc(100vh - 56px);
+    transition: all 0.3s;
+    width: 250px;
+    position: fixed;
+    top: 56px;
+    left: 0;
+    z-index: 100;
+    overflow-y: auto;
+    border-right: 1px solid rgba(100, 255, 218, 0.1);
+}
+
+.sidebar .nav-link {
+    color: var(--text-primary) !important;
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    transition: all 0.3s;
+    border-radius: 8px;
+    margin: 4px 8px;
+}
+
+.sidebar .nav-link:hover {
+    background-color: rgba(100, 255, 218, 0.1);
+    transform: translateX(5px);
+}
+
+.sidebar .nav-link .material-icons {
+    margin-right: 10px;
+    font-size: 20px;
+    color: var(--accent-color);
+}
+
+.main-content {
+    padding: 20px;
+    transition: all 0.3s;
+    margin-left: 250px;
+    margin-top: 56px;
+    width: calc(100% - 250px);
+    background: transparent;
+}
+
+.card {
+    background-color: rgba(15, 40, 71, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(100, 255, 218, 0.1);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.3);
+}
+
+.card-header {
+    background-color: rgba(100, 255, 218, 0.05);
+    border-bottom: 1px solid rgba(100, 255, 218, 0.1);
+    padding: 1rem;
+    border-radius: 12px 12px 0 0;
+}
+
+.table {
+    color: var(--text-primary) !important;
+}
+
+.table-sm {
+    font-size: 0.875rem;
+}
+
+.table-sm td, .table-sm th {
+    color: var(--text-primary) !important;  /* Ensure high contrast and readability */
+    padding: 1rem;
+    vertical-align: middle;
+    font-weight: 700;  /* Increase font weight for better readability */
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(100, 255, 218, 0.05);
+}
+
+.btn-primary {
+    background-color: var(--accent-color);
+    border: none;
+    color: var(--primary-color);
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background-color: rgba(0, 245, 255, 0.8);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 245, 255, 0.3);
+}
+
+.form-control {
+    background-color: rgba(15, 40, 71, 0.95);
+    border: 1px solid rgba(100, 255, 218, 0.2);
+    color: var(--text-primary);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    background-color: rgba(15, 40, 71, 0.95);
+    border-color: var(--accent-color);
+    color: var(--text-primary);
+    box-shadow: 0 0 0 0.25rem rgba(0, 245, 255, 0.25);
+}
+
+.custom-hamburger span {
+    background: var(--accent-color);
+}
+
+/* Status indicators */
+.status-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 8px;
+    position: relative;
+}
+
+.status-indicator::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+    70% {
+        transform: scale(2);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 0;
+    }
+}
+
+.status-critical {
+    background-color: var(--danger-color);
+    box-shadow: 0 0 20px var(--danger-color);
+}
+
+.status-warning {
+    background-color: var(--warning-color);
+    box-shadow: 0 0 20px var(--warning-color);
+}
+
+.status-normal {
+    background-color: var(--success-color);
+    box-shadow: 0 0 20px var(--success-color);
+}
+
+/* Responsive Design */
+@media screen and (max-width: 768px) {
+    .sidebar {
+        transform: translateX(-100%);
+        position: fixed;
+    }
+
+    .sidebar.show {
+        transform: translateX(0);
+    }
+
+    .main-content {
+        margin-left: 0;
+        width: 100%;
+    }
+}
+
+@media (max-width: 991.98px) {
+    .navbar-collapse {
+        background-color: var(--card-bg);
+        position: fixed;
+        top: 56px;
+        left: 0;
+        padding: 1rem;
+        width: 100%;
+        height: calc(100% - 56px);
+        z-index: 1000;
+    }
+}
+
+/* Map container styling */
+#map {
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
